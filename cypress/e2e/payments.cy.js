@@ -15,4 +15,15 @@ describe('payments', () => {
 
     cy.findByText('Payment has been completed.').should('exist');
   });
+
+  it('clear payment filters', () => {
+    cy.findByRole('link', { name: 'Payments' }).click();
+
+    cy.findByRole('combobox', { name: 'State' }).select('New');
+    cy.findByRole('combobox', { name: 'Channel' }).select('Fashion Web Store');
+    cy.findByRole('link', { name: 'Clear filters' }).click();
+
+    cy.findByRole('combobox', { name: 'State' }).should('have.value', '');
+    cy.findByRole('combobox', { name: 'Channel' }).should('have.value', '');
+  });
 });
