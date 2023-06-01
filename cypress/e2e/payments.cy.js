@@ -11,7 +11,7 @@ describe('payments', () => {
 
     cy.findByRole('combobox', { name: 'State' }).select('New');
     cy.findByRole('button', { name: 'Filter' }).click();
-    cy.findByRole('button', { name: 'Complete' }).click();
+    cy.findAllByRole('button', { name: 'Complete' }).first().click();
 
     cy.findByText('Payment has been completed.').should('exist');
   });
@@ -30,13 +30,14 @@ describe('payments', () => {
   it('should show a message if no payments were found with the current filters', () => {
     cy.findByRole('link', { name: 'Payments' }).click();
 
-    cy.findByRole('combobox', { name: 'State' }).select('Cancelled');
+    cy.findByRole('combobox', { name: 'State' }).select('Refunded');
+    cy.findByRole('combobox', { name: 'Channel' }).select('Fashion Web Store');
     cy.findByRole('button', { name: 'Filter' }).click();
 
     cy.findByText('There are no results to display').should('exist');
   });
 
-  it('should navigate payment list pages by clicking on "Next" and "Previous"', () => {
+  it('should navigate between payment list pages by clicking on "Next" and "Previous"', () => {
     cy.findByRole('link', { name: 'Payments' }).click();
     cy.url().should('not.include', 'page=1');
     cy.findAllByRole('link', { name: 'Previous' }).should('not.exist');
@@ -49,9 +50,16 @@ describe('payments', () => {
     cy.url().should('include', 'page=1');
     cy.findAllByRole('link', { name: 'Previous' }).should('not.exist');
     cy.findAllByRole('link', { name: 'Next' }).first().should('exist');
+
+    cy.findByRole('combobox', { name: 'State' }).select('Refunded');
+    cy.findByRole('combobox', { name: 'Channel' }).select('Fashion Web Store');
+    cy.findByRole('button', { name: 'Filter' }).click();
+
+    cy.findAllByRole('link', { name: 'Previous' }).should('not.exist');
+    cy.findAllByRole('link', { name: 'Next' }).should('not.exist');
   });
 
-  it('should navigate payment list pages by clicking on each page number', () => {
+  it('should navigate between payment list pages by clicking on each page number', () => {
     cy.findByRole('link', { name: 'Payments' }).click();
     cy.url().should('not.include', 'page=1');
     cy.findAllByRole('link', { name: '1' }).should('not.exist');
@@ -64,8 +72,11 @@ describe('payments', () => {
     cy.url().should('include', 'page=1');
     cy.findAllByRole('link', { name: '1' }).should('not.exist');
 
-    cy.findAllByRole('link', { name: '2' }).first().click();
-    cy.url().should('include', 'page=2');
+    cy.findByRole('combobox', { name: 'State' }).select('Refunded');
+    cy.findByRole('combobox', { name: 'Channel' }).select('Fashion Web Store');
+    cy.findByRole('button', { name: 'Filter' }).click();
+
+    cy.findAllByRole('link', { name: '1' }).should('not.exist');
     cy.findAllByRole('link', { name: '2' }).should('not.exist');
   });
 
