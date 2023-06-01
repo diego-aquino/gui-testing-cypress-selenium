@@ -1,11 +1,11 @@
-const { Builder, By, until } = require('selenium-webdriver');
+const { Builder, By } = require('selenium-webdriver');
 const assert = require('assert');
 
 describe('payments', () => {
   let driver;
 
   before(async () => {
-    driver = await new Builder().forBrowser('firefox').build();
+    driver = await new Builder().forBrowser('chrome').build();
   });
 
   after(async () => {
@@ -15,41 +15,162 @@ describe('payments', () => {
   beforeEach(async () => {
     driver.manage().deleteAllCookies();
     await driver.get('http://localhost:8080/admin');
-    // await driver.get('http://150.165.75.99:8080/admin');
     await driver.findElement(By.id('_username')).sendKeys('sylius');
     await driver.findElement(By.id('_password')).sendKeys('sylius');
     await driver.findElement(By.css('.primary')).click();
-    // await driver.sleep(1000);
   });
 
-  // Remove .only and implement others test cases!
-  it.only('complete a new payment', async () => {
-    // Click in payments in side menu
+  it('should complete a new payment', async () => {
     await driver.findElement(By.linkText('Payments')).click();
 
-    // Select the state to search for new payments
-    const dropdown = await driver.findElement(By.id('criteria_state'));
-    await dropdown.findElement(By.xpath("//option[. = 'New']")).click();
+    const stateCombobox = await driver.findElement(By.xpath('//select[@name="criteria[state]"]'));
+    await stateCombobox.findElement(By.xpath("//option[. = 'New']")).click();
+    assert.strictEqual(await stateCombobox.getAttribute('value'), 'new');
 
-    // Click in filter blue button
-    await driver.findElement(By.css('*[class^="ui blue labeled icon button"]')).click();
+    const filterButton = await driver.findElement(By.css('*[class^="ui blue labeled icon button"]'));
+    await filterButton.click();
 
-    // Click in complete of the first payment listed
-    const buttons = await driver.findElements(By.css('*[class^="ui loadable teal labeled icon button"]'));
-    await buttons[0].click();
+    const completePaymentButtons = await driver.findElements(By.css('*[class^="ui loadable teal labeled icon button"]'));
+    await completePaymentButtons[0].click();
 
-    // Assert that payment has been completed
     const bodyText = await driver.findElement(By.tagName('body')).getText();
     assert(bodyText.includes('Payment has been completed.'));
   });
 
-  it('test case 2', async () => {
-    // Implement your test case 2 code here
+  it('should clear payment filters', async () => {
+    await driver.findElement(By.linkText('Payments')).click();
+
+    let stateCombobox = await driver.findElement(By.xpath('//select[@name="criteria[state]"]'));
+    await stateCombobox.findElement(By.xpath("//option[. = 'New']")).click();
+    assert.strictEqual(await stateCombobox.getAttribute('value'), 'new');
+
+    let channelCombobox = await driver.findElement(By.xpath('//select[@name="criteria[channel]"]'));
+    await channelCombobox.findElement(By.xpath("//option[. = 'Fashion Web Store']")).click();
+    assert.strictEqual(await channelCombobox.getAttribute('value'), '2');
+
+    const filterButton = await driver.findElement(By.css('*[class^="ui blue labeled icon button"]'));
+    await filterButton.click();
+
+    const clearFiltersLink = await driver.findElement(By.linkText('Clear filters'));
+    await clearFiltersLink.click();
+
+    stateCombobox = await driver.findElement(By.xpath('//select[@name="criteria[state]"]'));
+    assert.strictEqual(await stateCombobox.getAttribute('value'), '');
+
+    channelCombobox = await driver.findElement(By.xpath('//select[@name="criteria[channel]"]'));
+    assert.strictEqual(await stateCombobox.getAttribute('value'), '');
   });
 
-  it('test case 3', async () => {
-    // Implement your test case 3 code here
+  it('should show a message if no payments were found with the current filters', async () => {
+    await driver.findElement(By.linkText('Payments')).click();
+
+    let stateCombobox = await driver.findElement(By.xpath('//select[@name="criteria[state]"]'));
+    await stateCombobox.findElement(By.xpath("//option[. = 'Refunded']")).click();
+    assert.strictEqual(await stateCombobox.getAttribute('value'), 'refunded');
+
+    let channelCombobox = await driver.findElement(By.xpath('//select[@name="criteria[channel]"]'));
+    await channelCombobox.findElement(By.xpath("//option[. = 'Fashion Web Store']")).click();
+    assert.strictEqual(await channelCombobox.getAttribute('value'), '2');
+
+    const filterButton = await driver.findElement(By.css('*[class^="ui blue labeled icon button"]'));
+    await filterButton.click();
+
+    const bodyText = await driver.findElement(By.tagName('body')).getText();
+    assert(bodyText.includes('There are no results to display'));
   });
 
-  // Implement the remaining test cases in a similar manner
+  it('should navigate between payment list pages by clicking on "Next" and "Previous"', async () => {
+    await driver.findElement(By.linkText('Payments')).click();
+
+    let currentURL = await driver.getCurrentUrl();
+    assert(!currentURL.includes('page=1'));
+
+    let previousButtons = await driver.findElements(By.linkText('Previous'));
+    assert.strictEqual(previousButtons.length, 0);
+
+    let nextButtons = await driver.findElements(By.linkText('Next'));
+    await nextButtons[0].click();
+
+    currentURL = await driver.getCurrentUrl();
+    assert(currentURL.includes('page=2'));
+
+    nextButtons = await driver.findElements(By.linkText('Next'));
+    assert.strictEqual(nextButtons.length, 0);
+
+    previousButtons = await driver.findElements(By.linkText('Previous'));
+    await previousButtons[0].click();
+
+    currentURL = await driver.getCurrentUrl();
+    assert(currentURL.includes('page=1'));
+
+    previousButtons = await driver.findElements(By.linkText('Previous'));
+    assert.strictEqual(previousButtons.length, 0);
+
+    nextButtons = await driver.findElements(By.linkText('Next'));
+    assert(nextButtons.length > 0);
+
+    let stateCombobox = await driver.findElement(By.xpath('//select[@name="criteria[state]"]'));
+    await stateCombobox.findElement(By.xpath("//option[. = 'Refunded']")).click();
+    assert.strictEqual(await stateCombobox.getAttribute('value'), 'refunded');
+
+    let channelCombobox = await driver.findElement(By.xpath('//select[@name="criteria[channel]"]'));
+    await channelCombobox.findElement(By.xpath("//option[. = 'Fashion Web Store']")).click();
+    assert.strictEqual(await channelCombobox.getAttribute('value'), '2');
+
+    const filterButton = await driver.findElement(By.css('*[class^="ui blue labeled icon button"]'));
+    await filterButton.click();
+
+    previousButtons = await driver.findElements(By.linkText('Previous'));
+    assert.strictEqual(previousButtons.length, 0);
+
+    nextButtons = await driver.findElements(By.linkText('Next'));
+    assert.strictEqual(nextButtons.length, 0);
+  });
+
+  it('should navigate between payment list pages by clicking on each page number', async () => {
+    await driver.findElement(By.linkText('Payments')).click();
+
+    let currentURL = await driver.getCurrentUrl();
+    assert(!currentURL.includes('page=1'));
+
+    let firstPageNumbers = await driver.findElements(By.linkText('1'));
+    assert.strictEqual(firstPageNumbers.length, 0);
+
+    let secondPageNumbers = await driver.findElements(By.linkText('2'));
+    await secondPageNumbers[0].click();
+
+    currentURL = await driver.getCurrentUrl();
+    assert(currentURL.includes('page=2'));
+
+    secondPageNumbers = await driver.findElements(By.linkText('2'));
+    assert.strictEqual(secondPageNumbers.length, 0);
+
+    firstPageNumbers = await driver.findElements(By.linkText('1'));
+    await firstPageNumbers[0].click();
+
+    currentURL = await driver.getCurrentUrl();
+    assert(currentURL.includes('page=1'));
+
+    firstPageNumbers = await driver.findElements(By.linkText('1'));
+    assert.strictEqual(firstPageNumbers.length, 0);
+
+    let stateCombobox = await driver.findElement(By.xpath('//select[@name="criteria[state]"]'));
+    await stateCombobox.findElement(By.xpath("//option[. = 'Refunded']")).click();
+    assert.strictEqual(await stateCombobox.getAttribute('value'), 'refunded');
+
+    let channelCombobox = await driver.findElement(By.xpath('//select[@name="criteria[channel]"]'));
+    await channelCombobox.findElement(By.xpath("//option[. = 'Fashion Web Store']")).click();
+    assert.strictEqual(await channelCombobox.getAttribute('value'), '2');
+
+    const filterButton = await driver.findElement(By.css('*[class^="ui blue labeled icon button"]'));
+    await filterButton.click();
+
+    firstPageNumbers = await driver.findElements(By.linkText('1'));
+    assert.strictEqual(firstPageNumbers.length, 0);
+
+    secondPageNumbers = await driver.findElements(By.linkText('2'));
+    assert.strictEqual(secondPageNumbers.length, 0);
+  });
+
+  it('should limit the payment list', () => {});
 });
