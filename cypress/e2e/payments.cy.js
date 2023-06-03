@@ -1,30 +1,103 @@
+// We recommend testing this file using the Cypress interface (cypress open), which usually results in less flaky tests.
+// If you encounter a "Permission denied" or log in error, please rerun the tests one or more times and they should pass.
+
 describe('payments', () => {
   beforeEach(() => {
     cy.visit('/admin');
-    cy.get('[id="_username"]').type('sylius');
-    cy.get('[id="_password"]').type('sylius');
-    cy.get('.primary').click();
-  });
-  // Remove .only and implement others test cases!
-  it.only('complete a new payment', () => {
-    // Click in payments in side menu
-    cy.clickInFirst('a[href="/admin/payments/"]');
-    // Type in value input to search for specify payment
-    cy.get('.ui > .sylius-filters > .sylius-filters__field > .field > #criteria_state').select('new');
-    // Click in filter blue button
-    cy.get('*[class^="ui blue labeled icon button"]').click();
-    // Click in complete of the first payment listed
-    cy.clickInFirst('*[class^="ui loadable teal labeled icon button"]');
-
-    // Assert that payment has been completed
-    cy.get('body').should('contain', 'Payment has been completed.');
-  });
-  it('test case 2', () => {
-    // Implement your test case 2 code here
-  });
-  it('test case 3', () => {
-    // Implement your test case 3 code here
+    cy.findByLabelText('Username').type('sylius');
+    cy.findByLabelText('Password').type('sylius');
+    cy.findByRole('button', { name: 'Login' }).click();
   });
 
-  // Implement the remaining test cases in a similar manner
+  it('should complete a new payment', () => {
+    cy.findByRole('link', { name: 'Payments' }).click();
+
+    cy.findByRole('combobox', { name: 'State' }).select('New');
+    cy.findByRole('button', { name: 'Filter' }).click();
+    cy.findAllByRole('button', { name: 'Complete' }).first().click();
+
+    cy.findByText('Payment has been completed.').should('exist');
+  });
+
+  it('should clear payment filters', () => {
+    cy.findByRole('link', { name: 'Payments' }).click();
+
+    cy.findByRole('combobox', { name: 'State' }).select('New');
+    cy.findByRole('combobox', { name: 'Channel' }).select('Fashion Web Store');
+    cy.findByRole('button', { name: 'Filter' }).click();
+    cy.findByRole('link', { name: 'Clear filters' }).click();
+
+    cy.findByRole('combobox', { name: 'State' }).should('have.value', '');
+    cy.findByRole('combobox', { name: 'Channel' }).should('have.value', '');
+  });
+
+  it('should show a message if no payments were found with the current filters', () => {
+    cy.findByRole('link', { name: 'Payments' }).click();
+
+    cy.findByRole('combobox', { name: 'State' }).select('Refunded');
+    cy.findByRole('combobox', { name: 'Channel' }).select('Fashion Web Store');
+    cy.findByRole('button', { name: 'Filter' }).click();
+
+    cy.findByText('There are no results to display').should('exist');
+  });
+
+  it('should navigate between payment list pages by clicking on "Next" and "Previous"', () => {
+    cy.findByRole('link', { name: 'Payments' }).click();
+    cy.url().should('not.include', 'page=1');
+    cy.findAllByRole('link', { name: 'Previous' }).should('not.exist');
+
+    cy.findAllByRole('link', { name: 'Next' }).first().click();
+    cy.url().should('include', 'page=2');
+    cy.findAllByRole('link', { name: 'Next' }).should('not.exist');
+
+    cy.findAllByRole('link', { name: 'Previous' }).first().click();
+    cy.url().should('include', 'page=1');
+    cy.findAllByRole('link', { name: 'Previous' }).should('not.exist');
+    cy.findAllByRole('link', { name: 'Next' }).first().should('exist');
+
+    cy.findByRole('combobox', { name: 'State' }).select('Refunded');
+    cy.findByRole('combobox', { name: 'Channel' }).select('Fashion Web Store');
+    cy.findByRole('button', { name: 'Filter' }).click();
+
+    cy.findAllByRole('link', { name: 'Previous' }).should('not.exist');
+    cy.findAllByRole('link', { name: 'Next' }).should('not.exist');
+  });
+
+  it('should navigate between payment list pages by clicking on each page number', () => {
+    cy.findByRole('link', { name: 'Payments' }).click();
+    cy.url().should('not.include', 'page=1');
+    cy.findAllByRole('link', { name: '1' }).should('not.exist');
+
+    cy.findAllByRole('link', { name: '2' }).first().click();
+    cy.url().should('include', 'page=2');
+    cy.findAllByRole('link', { name: '2' }).should('not.exist');
+
+    cy.findAllByRole('link', { name: '1' }).first().click();
+    cy.url().should('include', 'page=1');
+    cy.findAllByRole('link', { name: '1' }).should('not.exist');
+
+    cy.findByRole('combobox', { name: 'State' }).select('Refunded');
+    cy.findByRole('combobox', { name: 'Channel' }).select('Fashion Web Store');
+    cy.findByRole('button', { name: 'Filter' }).click();
+
+    cy.findAllByRole('link', { name: '1' }).should('not.exist');
+    cy.findAllByRole('link', { name: '2' }).should('not.exist');
+  });
+
+  it('should limit the payment list', () => {
+    cy.findByRole('link', { name: 'Payments' }).click();
+    cy.url().should('not.include', 'limit=10');
+
+    cy.findByText('Show 10').click();
+    cy.findByRole('link', { name: '25' }).click();
+    cy.url().should('include', 'limit=25');
+
+    cy.findByText('Show 25').click();
+    cy.findByRole('link', { name: '50' }).click();
+    cy.url().should('include', 'limit=50');
+
+    cy.findByText('Show 50').click();
+    cy.findByRole('link', { name: '10' }).click();
+    cy.url().should('include', 'limit=10');
+  });
 });

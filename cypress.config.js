@@ -7,5 +7,7 @@ module.exports = defineConfig({
     // baseUrl: 'http://150.165.75.99:8080',
     viewportWidth: 1280,
     viewportHeight: 720,
+    video: false,
+    screenshotOnRunFailure: true,
   },
 });
