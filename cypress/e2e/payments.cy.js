@@ -24,6 +24,7 @@ describe('payments', () => {
 
     cy.findByRole('combobox', { name: 'State' }).select('New');
     cy.findByRole('combobox', { name: 'Channel' }).select('Fashion Web Store');
+    cy.findByRole('button', { name: 'Filter' }).click();
     cy.findByRole('link', { name: 'Clear filters' }).click();
 
     cy.findByRole('combobox', { name: 'State' }).should('have.value', '');
