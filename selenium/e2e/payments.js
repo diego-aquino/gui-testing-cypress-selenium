@@ -1,3 +1,5 @@
+// If you encounter a "Permission denied" or log in error, please rerun the tests one or more times and they should pass.
+
 const { Builder, By } = require('selenium-webdriver');
 const assert = require('assert');
 

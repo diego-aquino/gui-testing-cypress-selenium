@@ -1,3 +1,6 @@
+// We recommend testing this file using the Cypress interface (cypress open), which usually results in less flaky tests.
+// If you encounter a "Permission denied" or log in error, please rerun the tests one or more times and they should pass.
+
 describe('payments', () => {
   beforeEach(() => {
     cy.visit('/admin');
