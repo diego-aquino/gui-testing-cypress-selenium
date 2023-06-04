@@ -110,6 +110,9 @@ describe('payments', () => {
 
     cy.findByText('Date').click();
     cy.url().should('include', 'sorting%5BcreatedAt%5D=desc');
+
+    cy.findAllByRole('link', { name: '2' }).first().click();
+    cy.url().should('include', 'sorting%5BcreatedAt%5D=desc');
   })
 
   it('order link should go to the correct order', () => {
@@ -127,6 +130,13 @@ describe('payments', () => {
 
       cy.url().should('include', '/admin/orders/' + orderId);
       cy.findByText("Order " + order).should('exist');
+
+      cy.findByRole('link', { name: 'Payments' }).click();
+
+      cy.findByRole('combobox', { name: 'State' }).select('Completed');
+      cy.findByRole('button', { name: 'Filter' }).click();
+
+      cy.findByText(order).should('exist');
     });
   })
 
