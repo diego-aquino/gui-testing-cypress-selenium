@@ -34,7 +34,7 @@ describe('payments', () => {
   it('should show a message if no payments were found with the current filters', () => {
     cy.findByRole('link', { name: 'Payments' }).click();
 
-    cy.findByRole('combobox', { name: 'State' }).select('Refunded');
+    cy.findByRole('combobox', { name: 'State' }).select('Failed');
     cy.findByRole('combobox', { name: 'Channel' }).select('Fashion Web Store');
     cy.findByRole('button', { name: 'Filter' }).click();
 
@@ -55,7 +55,7 @@ describe('payments', () => {
     cy.findAllByRole('link', { name: 'Previous' }).should('not.exist');
     cy.findAllByRole('link', { name: 'Next' }).first().should('exist');
 
-    cy.findByRole('combobox', { name: 'State' }).select('Refunded');
+    cy.findByRole('combobox', { name: 'State' }).select('Failed');
     cy.findByRole('combobox', { name: 'Channel' }).select('Fashion Web Store');
     cy.findByRole('button', { name: 'Filter' }).click();
 
@@ -76,7 +76,7 @@ describe('payments', () => {
     cy.url().should('include', 'page=1');
     cy.findAllByRole('link', { name: '1' }).should('not.exist');
 
-    cy.findByRole('combobox', { name: 'State' }).select('Refunded');
+    cy.findByRole('combobox', { name: 'State' }).select('Failed');
     cy.findByRole('combobox', { name: 'Channel' }).select('Fashion Web Store');
     cy.findByRole('button', { name: 'Filter' }).click();
 
@@ -100,4 +100,109 @@ describe('payments', () => {
     cy.findByRole('link', { name: '10' }).click();
     cy.url().should('include', 'limit=10');
   });
+
+  it('should order orders by Date', () => {
+    cy.findByRole('link', { name: 'Payments' }).click();
+
+    cy.findByText('Date').click();
+    // sorting[createdAt] => sorting%5BcreatedAt%5D
+    cy.url().should('include', 'sorting%5BcreatedAt%5D=asc');
+
+    cy.findByText('Date').click();
+    cy.url().should('include', 'sorting%5BcreatedAt%5D=desc');
+
+    cy.findAllByRole('link', { name: '2' }).first().click();
+    cy.url().should('include', 'sorting%5BcreatedAt%5D=desc');
+  })
+
+  it('order link should go to the correct order', () => {
+    cy.findByRole('link', { name: 'Payments' }).click();
+
+    cy.findByRole('combobox', { name: 'State' }).select('Completed');
+    cy.findByRole('button', { name: 'Filter' }).click();
+
+    cy.findAllByRole('link', { name: /#\d+/ }).first().invoke('text').then(order => {
+      cy.log('order number is', order);
+      const orderId = parseInt(order.replace('#', ''), 10);
+      cy.log('order id is', orderId);
+
+      cy.findByRole('link', { name: order }).click();
+
+      cy.url().should('include', '/admin/orders/' + orderId);
+      cy.findByText("Order " + order).should('exist');
+
+      cy.findByRole('link', { name: 'Payments' }).click();
+
+      cy.findByRole('combobox', { name: 'State' }).select('Completed');
+      cy.findByRole('button', { name: 'Filter' }).click();
+
+      cy.findByText(order).should('exist');
+    });
+  })
+
+  it('should refund orders', () => {
+    cy.findByRole('link', { name: 'Payments' }).click();
+
+    cy.findByRole('combobox', { name: 'State' }).select('Completed');
+    cy.findByRole('button', { name: 'Filter' }).click();
+
+    cy.findAllByRole('link', { name: /#\d+/ }).first().invoke('text').then(order => {
+      cy.log('order number is', order)
+
+      cy.findByRole('link', { name: order }).click();
+
+      cy.findByRole('button', { name: "Refund" }).click();
+
+      cy.findByText('Payment has been successfully refunded.').should('exist');
+
+      cy.findByRole('link', { name: 'Payments' }).click();
+
+      cy.findByRole('combobox', { name: 'State' }).select('Refunded');
+      cy.findByRole('button', { name: 'Filter' }).click();
+
+      cy.findByText(order).should('exist');
+    });
+  })
+
+  it('should complete a new payment through its page', () => {
+    cy.findByRole('link', { name: 'Payments' }).click();
+
+    cy.findByRole('combobox', { name: 'State' }).select('New');
+    cy.findByRole('button', { name: 'Filter' }).click();
+
+    cy.findAllByRole('link', { name: /#\d+/ }).first().invoke('text').then(order => {
+      cy.log('order number is', order)
+
+      cy.findByRole('link', { name: order }).click();
+
+      cy.findByRole('button', { name: "Complete" }).click();
+
+      cy.findByText('Payment has been successfully updated.').should('exist');
+
+      cy.findByRole('link', { name: 'Payments' }).click();
+
+      cy.findByRole('combobox', { name: 'State' }).select('Completed');
+      cy.findByRole('button', { name: 'Filter' }).click();
+
+      cy.findByText(order).should('exist');
+    });
+  });
+
+  it('should filter payments by State', () => {
+    cy.findByRole('link', { name: 'Payments' }).click();
+
+    cy.findByRole('combobox', { name: 'State' }).select('Completed');
+    cy.findByRole('button', { name: 'Filter' }).click();
+
+    cy.findByText('New', { selector: 'span.ui.olive.label'}).should('not.exist');
+    cy.findByText('Refunded', { selector: 'span.ui.purple.label' }).should('not.exist');
+    cy.findAllByText('Completed', { selector: 'span.ui.green.label' }).should('exist');
+
+    cy.findByRole('combobox', { name: 'State' }).select('New');
+    cy.findByRole('button', { name: 'Filter' }).click();
+
+    cy.findByText('Refunded', { selector: 'span.ui.purple.label' }).should('not.exist');
+    cy.findByText('Completed', { selector: 'span.ui.green.label' }).should('not.exist');
+    cy.findAllByText('New', { selector: 'span.ui.olive.label'}).should('exist');
+  })
 });

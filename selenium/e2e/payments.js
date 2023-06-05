@@ -67,8 +67,8 @@ describe('payments', () => {
     await driver.findElement(By.linkText('Payments')).click();
 
     let stateCombobox = await driver.findElement(By.xpath('//select[@name="criteria[state]"]'));
-    await stateCombobox.findElement(By.xpath("//option[. = 'Refunded']")).click();
-    assert.strictEqual(await stateCombobox.getAttribute('value'), 'refunded');
+    await stateCombobox.findElement(By.xpath("//option[. = 'Failed']")).click();
+    assert.strictEqual(await stateCombobox.getAttribute('value'), 'failed');
 
     let channelCombobox = await driver.findElement(By.xpath('//select[@name="criteria[channel]"]'));
     await channelCombobox.findElement(By.xpath("//option[. = 'Fashion Web Store']")).click();
@@ -112,8 +112,8 @@ describe('payments', () => {
     assert(nextButtons.length > 0);
 
     let stateCombobox = await driver.findElement(By.xpath('//select[@name="criteria[state]"]'));
-    await stateCombobox.findElement(By.xpath("//option[. = 'Refunded']")).click();
-    assert.strictEqual(await stateCombobox.getAttribute('value'), 'refunded');
+    await stateCombobox.findElement(By.xpath("//option[. = 'Failed']")).click();
+    assert.strictEqual(await stateCombobox.getAttribute('value'), 'failed');
 
     let channelCombobox = await driver.findElement(By.xpath('//select[@name="criteria[channel]"]'));
     await channelCombobox.findElement(By.xpath("//option[. = 'Fashion Web Store']")).click();
@@ -157,8 +157,8 @@ describe('payments', () => {
     assert.strictEqual(firstPageNumbers.length, 0);
 
     let stateCombobox = await driver.findElement(By.xpath('//select[@name="criteria[state]"]'));
-    await stateCombobox.findElement(By.xpath("//option[. = 'Refunded']")).click();
-    assert.strictEqual(await stateCombobox.getAttribute('value'), 'refunded');
+    await stateCombobox.findElement(By.xpath("//option[. = 'Failed']")).click();
+    assert.strictEqual(await stateCombobox.getAttribute('value'), 'failed');
 
     let channelCombobox = await driver.findElement(By.xpath('//select[@name="criteria[channel]"]'));
     await channelCombobox.findElement(By.xpath("//option[. = 'Fashion Web Store']")).click();
@@ -174,5 +174,137 @@ describe('payments', () => {
     assert.strictEqual(secondPageNumbers.length, 0);
   });
 
-  it('should limit the payment list', () => {});
+  it('should limit the payment list', async () => {
+    await driver.findElement(By.linkText('Payments')).click();
+
+    let currentURL = await driver.getCurrentUrl();
+    assert(!currentURL.includes('limit=10'));
+
+    await driver.findElement(By.xpath("//*[contains(text(), 'Show 10')]")).click();
+    await driver.sleep(1000);
+    await driver.findElement(By.linkText('25')).click();
+    currentURL = await driver.getCurrentUrl();
+    assert(currentURL.includes('limit=25'));
+
+    await driver.findElement(By.xpath("//*[contains(text(), 'Show 25')]")).click();
+    await driver.sleep(1000);
+    await driver.findElement(By.linkText('50')).click();
+    currentURL = await driver.getCurrentUrl();
+    assert(currentURL.includes('limit=50'));
+
+    await driver.findElement(By.xpath("//*[contains(text(), 'Show 50')]")).click();
+    await driver.sleep(1000);
+    await driver.findElement(By.linkText('10')).click();
+    currentURL = await driver.getCurrentUrl();
+    assert(currentURL.includes('limit=10'));
+  });
+
+  it('should order orders by Date', async () => {
+    await driver.findElement(By.linkText('Payments')).click();
+
+    await driver.findElement(By.linkText('Date')).click();
+    let currentURL = await driver.getCurrentUrl();
+    assert(currentURL.includes('sorting%5BcreatedAt%5D=asc'));
+
+    await driver.findElement(By.linkText('Date')).click();
+    currentURL = await driver.getCurrentUrl();
+    assert(currentURL.includes('sorting%5BcreatedAt%5D=desc'));
+
+    await driver.findElement(By.linkText('2')).click();
+    currentURL = await driver.getCurrentUrl();
+    assert(currentURL.includes('sorting%5BcreatedAt%5D=desc'));
+  });
+
+  it('order link should go to the correct order', async () => {
+    await driver.findElement(By.linkText('Payments')).click();
+
+    let stateCombobox = await driver.findElement(By.xpath('//select[@name="criteria[state]"]'));
+    await stateCombobox.findElement(By.xpath("//option[. = 'Completed']")).click();
+    assert.strictEqual(await stateCombobox.getAttribute('value'), 'completed');
+
+    let filterButton = await driver.findElement(By.css('*[class^="ui blue labeled icon button"]'));
+    await filterButton.click();
+
+    let order = await driver.findElement(By.xpath('//tbody/tr[1]/td[2]/a'));
+    let orderText = await order.getText();
+    let orderId = parseInt(orderText.replace('#', ''));
+    await order.click();
+
+    let currentURL = await driver.getCurrentUrl();
+    assert(currentURL.includes('orders/', orderId));
+
+    await driver.findElement(By.linkText('Payments')).click();
+
+    stateCombobox = await driver.findElement(By.xpath('//select[@name="criteria[state]"]'));
+    await stateCombobox.findElement(By.xpath("//option[. = 'Completed']")).click();
+    assert.strictEqual(await stateCombobox.getAttribute('value'), 'completed');
+
+    filterButton = await driver.findElement(By.css('*[class^="ui blue labeled icon button"]'));
+    await filterButton.click();
+
+    await driver.findElement(By.xpath("//*[contains(text(), '" + orderText + "')]"));
+  });
+
+  it('should filter payments by State', async () => {
+    await driver.findElement(By.linkText('Payments')).click();
+
+    let stateCombobox = await driver.findElement(By.xpath('//select[@name="criteria[state]"]'));
+    await stateCombobox.findElement(By.xpath("//option[. = 'Completed']")).click();
+    assert.strictEqual(await stateCombobox.getAttribute('value'), 'completed');
+
+    let filterButton = await driver.findElement(By.css('*[class^="ui blue labeled icon button"]'));
+    await filterButton.click();
+
+    let elements = await driver.findElements(By.xpath("//*[@class='ui olive label']"));
+    assert.strictEqual(elements.length, 0);
+    elements = await driver.findElements(By.xpath("//*[@class='ui purple label']"));
+    assert.strictEqual(elements.length, 0);
+    elements = await driver.findElements(By.xpath("//*[@class='ui green label']"));
+    assert.notStrictEqual(elements.length, 0);
+
+    stateCombobox = await driver.findElement(By.xpath('//select[@name="criteria[state]"]'));
+    await stateCombobox.findElement(By.xpath("//option[. = 'New']")).click();
+    assert.strictEqual(await stateCombobox.getAttribute('value'), 'new');
+
+    filterButton = await driver.findElement(By.css('*[class^="ui blue labeled icon button"]'));
+    await filterButton.click();
+
+    elements = await driver.findElements(By.xpath("//*[@class='ui purple label']"));
+    assert.strictEqual(elements.length, 0);
+    elements = await driver.findElements(By.xpath("//*[@class='ui green label']"));
+    assert.strictEqual(elements.length, 0);
+    elements = await driver.findElements(By.xpath("//*[@class='ui olive label']"));
+    assert.notStrictEqual(elements.length, 0);
+  });
+
+  it('should refund orders', async () => {
+    await driver.findElement(By.linkText('Payments')).click();
+
+    let stateCombobox = await driver.findElement(By.xpath('//select[@name="criteria[state]"]'));
+    await stateCombobox.findElement(By.xpath("//option[. = 'Completed']")).click();
+    assert.strictEqual(await stateCombobox.getAttribute('value'), 'completed');
+
+    let filterButton = await driver.findElement(By.css('*[class^="ui blue labeled icon button"]'));
+    await filterButton.click();
+
+    let order = await driver.findElement(By.xpath('//tbody/tr[1]/td[2]/a'));
+    let orderText = await order.getText();
+    let orderId = parseInt(orderText.replace('#', ''));
+    await order.click();
+
+    await driver.findElement(By.xpath("//*[contains(text(), 'Refund')]")).click();
+    await driver.sleep(1000);
+    await driver.findElement(By.xpath("//*[contains(text(), 'Payment has been successfully refunded.')]"));
+
+    await driver.findElement(By.linkText('Payments')).click();
+
+    stateCombobox = await driver.findElement(By.xpath('//select[@name="criteria[state]"]'));
+    await stateCombobox.findElement(By.xpath("//option[. = 'Refunded']")).click();
+    assert.strictEqual(await stateCombobox.getAttribute('value'), 'refunded');
+
+    filterButton = await driver.findElement(By.css('*[class^="ui blue labeled icon button"]'));
+    await filterButton.click();
+
+    await driver.findElement(By.xpath("//*[contains(text(), '" + orderText + "')]"));
+  });
 });
