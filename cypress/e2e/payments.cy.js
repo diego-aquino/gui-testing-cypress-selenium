@@ -34,7 +34,7 @@ describe('payments', () => {
   it('should show a message if no payments were found with the current filters', () => {
     cy.findByRole('link', { name: 'Payments' }).click();
 
-    cy.findByRole('combobox', { name: 'State' }).select('Refunded');
+    cy.findByRole('combobox', { name: 'State' }).select('Failed');
     cy.findByRole('combobox', { name: 'Channel' }).select('Fashion Web Store');
     cy.findByRole('button', { name: 'Filter' }).click();
 
@@ -55,7 +55,7 @@ describe('payments', () => {
     cy.findAllByRole('link', { name: 'Previous' }).should('not.exist');
     cy.findAllByRole('link', { name: 'Next' }).first().should('exist');
 
-    cy.findByRole('combobox', { name: 'State' }).select('Refunded');
+    cy.findByRole('combobox', { name: 'State' }).select('Failed');
     cy.findByRole('combobox', { name: 'Channel' }).select('Fashion Web Store');
     cy.findByRole('button', { name: 'Filter' }).click();
 
@@ -76,7 +76,7 @@ describe('payments', () => {
     cy.url().should('include', 'page=1');
     cy.findAllByRole('link', { name: '1' }).should('not.exist');
 
-    cy.findByRole('combobox', { name: 'State' }).select('Refunded');
+    cy.findByRole('combobox', { name: 'State' }).select('Failed');
     cy.findByRole('combobox', { name: 'Channel' }).select('Fashion Web Store');
     cy.findByRole('button', { name: 'Filter' }).click();
 

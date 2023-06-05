@@ -67,8 +67,8 @@ describe('payments', () => {
     await driver.findElement(By.linkText('Payments')).click();
 
     let stateCombobox = await driver.findElement(By.xpath('//select[@name="criteria[state]"]'));
-    await stateCombobox.findElement(By.xpath("//option[. = 'Refunded']")).click();
-    assert.strictEqual(await stateCombobox.getAttribute('value'), 'refunded');
+    await stateCombobox.findElement(By.xpath("//option[. = 'Failed']")).click();
+    assert.strictEqual(await stateCombobox.getAttribute('value'), 'failed');
 
     let channelCombobox = await driver.findElement(By.xpath('//select[@name="criteria[channel]"]'));
     await channelCombobox.findElement(By.xpath("//option[. = 'Fashion Web Store']")).click();
@@ -112,8 +112,8 @@ describe('payments', () => {
     assert(nextButtons.length > 0);
 
     let stateCombobox = await driver.findElement(By.xpath('//select[@name="criteria[state]"]'));
-    await stateCombobox.findElement(By.xpath("//option[. = 'Refunded']")).click();
-    assert.strictEqual(await stateCombobox.getAttribute('value'), 'refunded');
+    await stateCombobox.findElement(By.xpath("//option[. = 'Failed']")).click();
+    assert.strictEqual(await stateCombobox.getAttribute('value'), 'failed');
 
     let channelCombobox = await driver.findElement(By.xpath('//select[@name="criteria[channel]"]'));
     await channelCombobox.findElement(By.xpath("//option[. = 'Fashion Web Store']")).click();
@@ -157,8 +157,8 @@ describe('payments', () => {
     assert.strictEqual(firstPageNumbers.length, 0);
 
     let stateCombobox = await driver.findElement(By.xpath('//select[@name="criteria[state]"]'));
-    await stateCombobox.findElement(By.xpath("//option[. = 'Refunded']")).click();
-    assert.strictEqual(await stateCombobox.getAttribute('value'), 'refunded');
+    await stateCombobox.findElement(By.xpath("//option[. = 'Failed']")).click();
+    assert.strictEqual(await stateCombobox.getAttribute('value'), 'failed');
 
     let channelCombobox = await driver.findElement(By.xpath('//select[@name="criteria[channel]"]'));
     await channelCombobox.findElement(By.xpath("//option[. = 'Fashion Web Store']")).click();
@@ -307,5 +307,4 @@ describe('payments', () => {
 
     await driver.findElement(By.xpath("//*[contains(text(), '" + orderText + "')]"));
   });
-
 });
