@@ -9,6 +9,7 @@ describe('payments', () => {
     cy.findByRole('button', { name: 'Login' }).click();
   });
 
+  // Test 1
   it('should complete a new payment', () => {
     cy.findByRole('link', { name: 'Payments' }).click();
 
@@ -19,6 +20,7 @@ describe('payments', () => {
     cy.findByText('Payment has been completed.').should('exist');
   });
 
+  // Test 2
   it('should clear payment filters', () => {
     cy.findByRole('link', { name: 'Payments' }).click();
 
@@ -31,6 +33,7 @@ describe('payments', () => {
     cy.findByRole('combobox', { name: 'Channel' }).should('have.value', '');
   });
 
+  // Test 3
   it('should show a message if no payments were found with the current filters', () => {
     cy.findByRole('link', { name: 'Payments' }).click();
 
@@ -41,6 +44,7 @@ describe('payments', () => {
     cy.findByText('There are no results to display').should('exist');
   });
 
+  // Test 4
   it('should navigate between payment list pages by clicking on "Next" and "Previous"', () => {
     cy.findByRole('link', { name: 'Payments' }).click();
     cy.url().should('not.include', 'page=1');
@@ -63,6 +67,7 @@ describe('payments', () => {
     cy.findAllByRole('link', { name: 'Next' }).should('not.exist');
   });
 
+  // Test 5
   it('should navigate between payment list pages by clicking on each page number', () => {
     cy.findByRole('link', { name: 'Payments' }).click();
     cy.url().should('not.include', 'page=1');
@@ -84,6 +89,7 @@ describe('payments', () => {
     cy.findAllByRole('link', { name: '2' }).should('not.exist');
   });
 
+  // Test 6
   it('should limit the payment list', () => {
     cy.findByRole('link', { name: 'Payments' }).click();
     cy.url().should('not.include', 'limit=10');
@@ -101,6 +107,7 @@ describe('payments', () => {
     cy.url().should('include', 'limit=10');
   });
 
+  // Test 7
   it('should order orders by Date', () => {
     cy.findByRole('link', { name: 'Payments' }).click();
 
@@ -115,6 +122,7 @@ describe('payments', () => {
     cy.url().should('include', 'sorting%5BcreatedAt%5D=desc');
   })
 
+  // Test 8
   it('order link should go to the correct order', () => {
     cy.findByRole('link', { name: 'Payments' }).click();
 
@@ -140,6 +148,7 @@ describe('payments', () => {
     });
   })
 
+  // Test 9
   it('should refund orders', () => {
     cy.findByRole('link', { name: 'Payments' }).click();
 
@@ -164,6 +173,26 @@ describe('payments', () => {
     });
   })
 
+  // Test 10
+  it('should filter payments by State', () => {
+    cy.findByRole('link', { name: 'Payments' }).click();
+
+    cy.findByRole('combobox', { name: 'State' }).select('Completed');
+    cy.findByRole('button', { name: 'Filter' }).click();
+
+    cy.findByText('New', { selector: 'span.ui.olive.label'}).should('not.exist');
+    cy.findByText('Refunded', { selector: 'span.ui.purple.label' }).should('not.exist');
+    cy.findAllByText('Completed', { selector: 'span.ui.green.label' }).should('exist');
+
+    cy.findByRole('combobox', { name: 'State' }).select('New');
+    cy.findByRole('button', { name: 'Filter' }).click();
+
+    cy.findByText('Refunded', { selector: 'span.ui.purple.label' }).should('not.exist');
+    cy.findByText('Completed', { selector: 'span.ui.green.label' }).should('not.exist');
+    cy.findAllByText('New', { selector: 'span.ui.olive.label'}).should('exist');
+  })
+
+  // Test 11 (extra)
   it('should complete a new payment through its page', () => {
     cy.findByRole('link', { name: 'Payments' }).click();
 
@@ -187,22 +216,4 @@ describe('payments', () => {
       cy.findByText(order).should('exist');
     });
   });
-
-  it('should filter payments by State', () => {
-    cy.findByRole('link', { name: 'Payments' }).click();
-
-    cy.findByRole('combobox', { name: 'State' }).select('Completed');
-    cy.findByRole('button', { name: 'Filter' }).click();
-
-    cy.findByText('New', { selector: 'span.ui.olive.label'}).should('not.exist');
-    cy.findByText('Refunded', { selector: 'span.ui.purple.label' }).should('not.exist');
-    cy.findAllByText('Completed', { selector: 'span.ui.green.label' }).should('exist');
-
-    cy.findByRole('combobox', { name: 'State' }).select('New');
-    cy.findByRole('button', { name: 'Filter' }).click();
-
-    cy.findByText('Refunded', { selector: 'span.ui.purple.label' }).should('not.exist');
-    cy.findByText('Completed', { selector: 'span.ui.green.label' }).should('not.exist');
-    cy.findAllByText('New', { selector: 'span.ui.olive.label'}).should('exist');
-  })
 });
